@@ -2,8 +2,8 @@ import requests
 import random
 import os
 
-BOT_TOKEN = os.environ["8225429380:AAEmibIopcuqGqxFkYnZpm0Sz1n6gzY_Jqc"]
-CHAT_ID = os.environ["1047073007"]
+BOT_TOKEN = os.environ["BOT_TOKEN"]
+CHAT_ID = os.environ["CHAT_ID"]
 
 IDEAS = [
     "Your phone isn’t spying on you — but this is worse",
