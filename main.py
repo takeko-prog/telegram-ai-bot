@@ -8,7 +8,7 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# Gemini Client (SDK အသစ် version)
+# Gemini SDK အသစ်ကို ချိတ်ဆက်ခြင်း
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 IDEAS = [
@@ -20,24 +20,24 @@ IDEAS = [
 ]
 
 def generate_script(topic):
-    prompt = f"Write a professional video script for: {topic}. Include Hook, Relatable moment, and call to action. Use simple English."
+    prompt = f"Write a full video script about: {topic}. Include Hook, Body, and Outro. Simple English."
     try:
-        # SDK အသစ်မှာ model နာမည်ကို 'gemini-1.5-flash' လို့ပဲ ရေးရပါတယ်
+        # SDK အသစ်မှာ model နာမည်ကို 'gemini-1.5-flash' လို့ပဲ တိုတိုရေးရပါတယ်
         response = client.models.generate_content(
             model="gemini-1.5-flash",
             contents=prompt
         )
         return response.text
     except Exception as e:
-        return f"Script generation failed: {str(e)}"
+        return f"Script generation failed. Error: {str(e)}"
 
 def send_telegram(text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": CHAT_ID,
-        "text": text,
-        # Markdown error တက်တတ်လို့ အပိုင်းအစတွေကို ရှင်းဖို့ parse_mode ကို ခဏဖြုတ်ထားပါမယ်
+        "text": text
     }
+    # Markdown parse error ကင်းအောင် parse_mode ကို ခဏဖြုတ်ထားပါတယ်
     r = requests.post(url, data=payload)
     return r.ok
 
@@ -45,10 +45,8 @@ def send_telegram(text):
 selected_topics = random.sample(IDEAS, 3)
 
 for i, topic in enumerate(selected_topics, 1):
-    script_content = generate_script(topic)
-    final_message = f"🎬 Video Idea {i}\n\nTopic: {topic}\n\n{script_content}"
+    script = generate_script(topic)
+    final_message = f"🎬 Video Idea {i}\nTopic: {topic}\n\n{script}"
     
     # Telegram ပို့မယ်
-    success = send_telegram(final_message)
-    if not success:
-        print(f"Failed to send Idea {i}")
+    send_telegram(final_message)
