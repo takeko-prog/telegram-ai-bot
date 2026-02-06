@@ -11,7 +11,7 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 # Gemini Configuration
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Model ကို flash သုံးတာ ပိုမြန်ပြီး free ပိုရပါတယ်
+# Model နာမည်ကို အတိအကျ ပြန်ပြင်ထားပါတယ်
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 IDEAS = [
@@ -23,30 +23,18 @@ IDEAS = [
 ]
 
 def generate_script(topic):
-    prompt = f"""
-    Write a detailed YouTube/TikTok video script for the topic: "{topic}"
-    Format it exactly like this:
-    🎬 Video Title: ...
-    ⏱️ 0:00–0:10 — Hook: ...
-    ⏱️ 0:10–0:40 — Content: ...
-    ... (continue with simple English)
-    """
+    prompt = f"Write a full video script about: {topic}. Include Hook, Body, and Outro."
     try:
-        # safety_settings ကို block_none ထားမှ script တွေက block မခံရမှာပါ
-        response = model.generate_content(
-            prompt,
-            safety_settings={
-                "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE",
-                "HARM_CATEGORY_HATE_SPEECH": "BLOCK_NONE",
-                "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_NONE",
-                "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
-            }
-        )
-        return response.text
+        # Generation config ထည့်ခြင်းဖြင့် ပိုသေချာစေပါတယ်
+        response = model.generate_content(prompt)
+        if response.text:
+            return response.text
+        else:
+            return "AI returned an empty response."
     except Exception as e:
         return f"Script generation failed: {str(e)}"
 
-# တစ်ခုချင်းစီအတွက် Script ရေးခိုင်းမယ် (Idea ၃ ခုလုံး)
+# Random ၃ ခုရွေးမယ်
 selected_topics = random.sample(IDEAS, 3)
 
 def send_telegram(text):
@@ -59,12 +47,11 @@ def send_telegram(text):
     r = requests.post(url, data=payload)
     return r.ok
 
-# စုစုပေါင်း ၃ ခု ပို့ပေးမှာပါ
 for i, topic in enumerate(selected_topics, 1):
     script = generate_script(topic)
-    final_text = f"📌 *Video Idea {i}*\n\n{script}"
+    final_text = f"🎬 *Video Idea {i}*\n\nTopic: {topic}\n\n{script}"
     
-    # စာသားအရမ်းရှည်ရင် Markdown Error တက်တတ်လို့ error ဖြစ်ရင် plain text နဲ့ ပြန်ပို့မယ်
+    # Message ရှည်လွန်းရင် (သို့) Markdown error တက်ရင် plain text နဲ့ ပြန်ပို့မယ်
     if not send_telegram(final_text):
-        payload = {"chat_id": CHAT_ID, "text": final_text}
-        requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", data=payload)
+        requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
+                      data={"chat_id": CHAT_ID, "text": final_text})
