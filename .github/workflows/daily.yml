@@ -16,7 +16,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          # cache line ကို ဖယ်လိုက်ပါပြီ (requirements.txt မရှိလို့ တက်တဲ့ error ကို ရှင်းရန်)
 
       - name: Install Dependencies
         run: |
