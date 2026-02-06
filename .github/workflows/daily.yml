@@ -2,21 +2,21 @@ name: Daily Telegram Ideas
 
 on:
   schedule:
-    # မြန်မာစံတော်ချိန် မနက် ၆:၀၀ နာရီမှာ ပို့ပေးမှာပါ (UTC 23:30)
+    # မြန်မာစံတော်ချိန် မနက် ၆:၀၀ နာရီ (UTC 23:30)
     - cron: "30 23 * * *"
-  workflow_dispatch: # Manual နှိပ်ပြီး စမ်းသပ်လို့ရအောင်
+  workflow_dispatch:
 
 jobs:
   send:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11" # Version 3.11 ကို တိုးလိုက်ခြင်းဖြင့် Library error ကင်းစေသည်
 
       - name: Install Dependencies
         run: |
@@ -26,7 +26,7 @@ jobs:
       - name: Run Python Bot
         run: python main.py
         env:
-          # GitHub Secrets ထဲမှာ ဒီ Name တွေအတိုင်း သေချာထည့်ထားပေးပါ
+          # Settings > Secrets ထဲမှာ ဒီ Name တွေအတိုင်း ရှိနေရပါမယ်
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
