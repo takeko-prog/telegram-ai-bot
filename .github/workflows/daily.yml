@@ -16,12 +16,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: 'pip' # Package တွေကို cache လုပ်ထားရင် ပိုမြန်ပါတယ်
+          # cache line ကို ဖြုတ်လိုက်ပါပြီ (requirements.txt မရှိလို့ error တက်တာကို ရှင်းဖို့)
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -U google-generativeai requests
+          pip install google-genai requests
 
       - name: Run Python Bot
         run: python main.py
