@@ -4,12 +4,14 @@ import requests
 import google.generativeai as genai
 
 # Environment Variables
-BOT_TOKEN = os.environ["BOT_TOKEN"]
-CHAT_ID = os.environ["CHAT_ID"]
-GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+CHAT_ID = os.environ.get("CHAT_ID")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 # Gemini Configuration
 genai.configure(api_key=GEMINI_API_KEY)
+
+# Model ကို flash သုံးတာ ပိုမြန်ပြီး free ပိုရပါတယ်
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 IDEAS = [
@@ -23,41 +25,46 @@ IDEAS = [
 def generate_script(topic):
     prompt = f"""
     Write a detailed YouTube/TikTok video script for the topic: "{topic}"
-    The script should include:
-    - A catchy Title
-    - Timestamps (e.g., 0:00-0:10)
-    - Hook, Relatable Moment, Big Reveal, and a Sticky Ending.
-    - Use simple, engaging English.
+    Format it exactly like this:
+    🎬 Video Title: ...
+    ⏱️ 0:00–0:10 — Hook: ...
+    ⏱️ 0:10–0:40 — Content: ...
+    ... (continue with simple English)
     """
-    response = model.generate_content(prompt)
-    return response.text
+    try:
+        # safety_settings ကို block_none ထားမှ script တွေက block မခံရမှာပါ
+        response = model.generate_content(
+            prompt,
+            safety_settings={
+                "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE",
+                "HARM_CATEGORY_HATE_SPEECH": "BLOCK_NONE",
+                "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_NONE",
+                "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
+            }
+        )
+        return response.text
+    except Exception as e:
+        return f"Script generation failed: {str(e)}"
 
-# Random Idea တစ်ခုကို ရွေးပြီး Script ရေးခိုင်းမယ်
-selected_topic = random.choice(IDEAS)
-full_script = generate_script(selected_topic)
-
-# Telegram ကို ပို့မယ့် Message (Title + Script)
-message = f"🎬 *Today's Full Script*\n\nTopic: {selected_topic}\n\n{full_script}"
+# တစ်ခုချင်းစီအတွက် Script ရေးခိုင်းမယ် (Idea ၃ ခုလုံး)
+selected_topics = random.sample(IDEAS, 3)
 
 def send_telegram(text):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    
-    # Telegram ရဲ့ Character limit 4096 ကျော်ရင် ခွဲပို့ဖို့ လိုအပ်နိုင်ပါတယ်
-    # အခြေခံအားဖြင့် အပိုင်းလိုက်ခွဲပို့ခြင်း (Chunking)
-    if len(text) > 4000:
-        for x in range(0, len(text), 4000):
-            payload = {
-                "chat_id": CHAT_ID,
-                "text": text[x:x+4000],
-                "parse_mode": "Markdown"
-            }
-            requests.post(url, data=payload)
-    else:
-        payload = {
-            "chat_id": CHAT_ID,
-            "text": text,
-            "parse_mode": "Markdown"
-        }
-        requests.post(url, data=payload)
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": text,
+        "parse_mode": "Markdown"
+    }
+    r = requests.post(url, data=payload)
+    return r.ok
 
-send_telegram(message)
+# စုစုပေါင်း ၃ ခု ပို့ပေးမှာပါ
+for i, topic in enumerate(selected_topics, 1):
+    script = generate_script(topic)
+    final_text = f"📌 *Video Idea {i}*\n\n{script}"
+    
+    # စာသားအရမ်းရှည်ရင် Markdown Error တက်တတ်လို့ error ဖြစ်ရင် plain text နဲ့ ပြန်ပို့မယ်
+    if not send_telegram(final_text):
+        payload = {"chat_id": CHAT_ID, "text": final_text}
+        requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", data=payload)
