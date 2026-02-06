@@ -2,7 +2,6 @@ name: Daily Telegram Ideas
 
 on:
   schedule:
-    # မြန်မာစံတော်ချိန် မနက် ၆:၀၀ နာရီ (UTC 23:30)
     - cron: "30 23 * * *"
   workflow_dispatch:
 
@@ -13,20 +12,20 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11" # Version 3.11 ကို တိုးလိုက်ခြင်းဖြင့် Library error ကင်းစေသည်
+          python-version: "3.11"
+          cache: 'pip' # Package တွေကို cache လုပ်ထားရင် ပိုမြန်ပါတယ်
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests google-generativeai
+          pip install -U google-generativeai requests
 
       - name: Run Python Bot
         run: python main.py
         env:
-          # Settings > Secrets ထဲမှာ ဒီ Name တွေအတိုင်း ရှိနေရပါမယ်
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
