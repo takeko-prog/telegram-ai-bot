@@ -19,7 +19,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -q -U google-generativeai python-telegram-bot
+          python -m pip install --upgrade pip
+          pip install -U google-generativeai python-telegram-bot
 
       - name: Run Script
         env:
