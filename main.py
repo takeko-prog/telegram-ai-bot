@@ -6,7 +6,7 @@ from telegram import Bot
 
 # Settings
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 # Gemini Setup
@@ -45,7 +45,7 @@ async def generate_script():
 
 async def run_bot():
     script_content = await generate_script()
-    bot = Bot(token=TELEGRAM_TOKEN)
+    bot = Bot(token=BOT_TOKEN)
     
     # Telegram message length limit (4096 chars) ကို မကျော်အောင် လိုအပ်ရင် ဖြတ်ပါ
     msg = f"🎬 **Daily Content Idea**\n\n{script_content}"
