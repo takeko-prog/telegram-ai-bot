@@ -9,22 +9,27 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-# Gemini Setup - နာမည်ကို ရိုးရိုးပဲ ထားပါ
+# Gemini Setup
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel(model_name="gemini-1.5-flash")
+
+# Model နာမည်ကို ဒီလိုလေးပဲ ရေးလိုက်ပါ
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 async def generate_script():
-    topics = ["Digital Privacy", "AI Secrets", "Phone Security", "Social Media Hacks"]
+    topics = [
+        "Digital Privacy", "AI Secrets", "Phone Security", 
+        "Data Tracking", "Algorithm Secrets"
+    ]
     topic = random.choice(topics)
     
-    prompt = f"Create a viral short video script in Myanmar language about: {topic}. Must include a Hook, Body, and a Mind-blowing Reveal."
+    prompt = f"Create a short viral video script in Myanmar language about: {topic}. Include Hook, Body, and Reveal."
     
     try:
-        # SDK က version တွေကို သူ့ဘာသာ ကိုင်တွယ်သွားပါလိမ့်မယ်
+        # SDK က version တွေကို သူ့ဘာသာ အကောင်းဆုံး ချိန်ညှိသွားပါလိမ့်မယ်
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"Gemini API Error: {str(e)}"
+        return f"Gemini Error: {str(e)}"
 
 async def run_bot():
     script_content = await generate_script()
@@ -34,7 +39,7 @@ async def run_bot():
     
     try:
         await bot.send_message(chat_id=CHAT_ID, text=msg[:4000], parse_mode="Markdown")
-        print("Done! Message sent to Telegram.")
+        print("Success: Sent to Telegram")
     except Exception as e:
         print(f"Telegram Error: {e}")
 
