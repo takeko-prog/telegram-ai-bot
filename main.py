@@ -1,52 +1,57 @@
 import os
 import random
-import requests
-from google import genai
+import asyncio
+import google.generativeai as genai
+from telegram import Bot
 
-# Environment Variables
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-CHAT_ID = os.environ.get("CHAT_ID")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# Settings
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
 
-# Gemini SDK အသစ်ကို ချိတ်ဆက်ခြင်း
-client = genai.Client(api_key=GEMINI_API_KEY)
+# Gemini Setup
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash-latest",
+    generation_config={
+        "temperature": 1.0, # အရမ်းကွဲပြားတဲ့ idea တွေရဖို့ ၁.၀ ထားပါ
+        "top_p": 0.95,
+    }
+)
 
-IDEAS = [
-    "Your phone isn’t spying on you — but this is worse",
-    "Why free apps are secretly more expensive than paid ones",
-    "This setting controls your entire phone life",
-    "The algorithm doesn’t hate you — it ignores you",
-    "Where your deleted photos actually go"
-]
-
-def generate_script(topic):
-    prompt = f"Write a full video script about: {topic}. Include Hook, Body, and Outro. Simple English."
+async def generate_script():
+    # Content မထပ်အောင် Topic တွေကို ပိုစုံအောင် ထည့်ထားပေးပါ
+    topics = [
+        "Digital Privacy Secrets", "Smart Phone Myths", "AI Future", 
+        "Data Tracking", "Social Media Algorithms", "Cyber Security"
+    ]
+    topic = random.choice(topics)
+    
+    prompt = f"""
+    Create a high-quality video script in Myanmar language about: {topic}.
+    Follow the professional structure:
+    - Dramatic Hook
+    - Relatable scenarios
+    - Deep insight/The reveal
+    - Call to action
+    Use engaging tone and detailed visual descriptions.
+    """
+    
     try:
-        # SDK အသစ်မှာ model နာမည်ကို 'gemini-1.5-flash' လို့ပဲ တိုတိုရေးရပါတယ်
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt
-        )
+        response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"Script generation failed. Error: {str(e)}"
+        return f"Gemini API Error: {str(e)}"
 
-def send_telegram(text):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": CHAT_ID,
-        "text": text
-    }
-    # Markdown parse error ကင်းအောင် parse_mode ကို ခဏဖြုတ်ထားပါတယ်
-    r = requests.post(url, data=payload)
-    return r.ok
-
-# Topic ၃ ခု ရွေးမယ်
-selected_topics = random.sample(IDEAS, 3)
-
-for i, topic in enumerate(selected_topics, 1):
-    script = generate_script(topic)
-    final_message = f"🎬 Video Idea {i}\nTopic: {topic}\n\n{script}"
+async def run_bot():
+    script_content = await generate_script()
+    bot = Bot(token=TELEGRAM_TOKEN)
     
-    # Telegram ပို့မယ်
-    send_telegram(final_message)
+    # Telegram message length limit (4096 chars) ကို မကျော်အောင် လိုအပ်ရင် ဖြတ်ပါ
+    msg = f"🎬 **Daily Content Idea**\n\n{script_content}"
+    
+    await bot.send_message(chat_id=CHAT_ID, text=msg[:4000], parse_mode="Markdown")
+    print("Sent to Telegram successfully!")
+
+if __name__ == "__main__":
+    asyncio.run(run_bot())
