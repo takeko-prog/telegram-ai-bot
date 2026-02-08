@@ -4,44 +4,30 @@ import asyncio
 import google.generativeai as genai
 from telegram import Bot
 
-# API Keys
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHAT_ID = os.getenv("CHAT_ID")
-
-# Gemini Setup
-genai.configure(api_key=GEMINI_API_KEY)
-
-# Model နာမည်ကို ဒီလိုလေးပဲ ရေးလိုက်ပါ
-model = genai.GenerativeModel('gemini-1.5-flash')
-
-async def generate_script():
-    topics = [
-        "Digital Privacy", "AI Secrets", "Phone Security", 
-        "Data Tracking", "Algorithm Secrets"
-    ]
-    topic = random.choice(topics)
-    
-    prompt = f"Create a short viral video script in Myanmar language about: {topic}. Include Hook, Body, and Reveal."
-    
-    try:
-        # SDK က version တွေကို သူ့ဘာသာ အကောင်းဆုံး ချိန်ညှိသွားပါလိမ့်မယ်
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"Gemini Error: {str(e)}"
+# Setup
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 async def run_bot():
-    script_content = await generate_script()
-    bot = Bot(token=BOT_TOKEN)
-    
-    msg = f"🎬 **Daily Content Idea**\n\n{script_content}"
-    
     try:
-        await bot.send_message(chat_id=CHAT_ID, text=msg[:4000], parse_mode="Markdown")
-        print("Success: Sent to Telegram")
+        # Model ကို ဒီလိုလေးပဲ ခေါ်ကြည့်ပါ
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Content ထပ်မနေအောင် random topic ထည့်ပါ
+        topic = random.choice(["Privacy", "AI Future", "Tech Myths"])
+        prompt = f"Create a short video script in Myanmar about {topic}."
+
+        # Response တောင်းခြင်း
+        response = model.generate_content(prompt)
+        content = response.text
+
+        # Telegram ပို့ခြင်း
+        bot = Bot(token=os.getenv("BOT_TOKEN"))
+        await bot.send_message(chat_id=os.getenv("CHAT_ID"), text=content)
+        print("Success!")
+
     except Exception as e:
-        print(f"Telegram Error: {e}")
+        # ဘယ်နေရာမှာ Error တက်လဲဆိုတာ ပိုသိသာအောင် debug လုပ်မယ်
+        print(f"Debug Error: {str(e)}")
 
 if __name__ == "__main__":
     asyncio.run(run_bot())
