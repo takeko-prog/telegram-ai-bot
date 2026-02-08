@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4  # ambassadors နေရာမှာ actions လို့ ပြောင်းပါ
+        uses: actions/setup-python@v5 # ဒီနေရာမှာ ambassadors မဟုတ်ဘဲ actions ဖြစ်ရပါမယ်
         with:
           python-version: '3.10'
 
       - name: Install dependencies
         run: |
-          pip install google-generativeai python-telegram-bot
+          pip install -q -U google-generativeai python-telegram-bot
 
       - name: Run Script
         env:
